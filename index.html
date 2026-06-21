@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA // Science-Based Adaptive Fitness Companion</title>
+  <meta name="description" content="A premium high-contrast fitness dashboard featuring real-time biomechanical form guides, dynamic workout scoring, progressive overload adjustments, a workout history log, and an interactive muscle heatmap.">
+  
+  <!-- iOS Standalone Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AURA">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png">
+  
+  <!-- Tailwind CSS v4 CDN -->
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  
+  <!-- Custom High-Contrast CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+
+  <!-- Header Section -->
+  <header class="w-full border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[4rem] py-2 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Logo -->
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-400 to-emerald-400 p-[1px] shadow-lg shadow-cyan-400/20">
+          <div class="w-full h-full bg-[#030508] rounded-xl flex items-center justify-center">
+            <i data-lucide="activity" class="w-5 h-5 text-cyan-400"></i>
+          </div>
+        </div>
+        <div>
+          <h1 class="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+            AURA <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800/40 text-cyan-400 font-extrabold tracking-normal uppercase">BIOMECH</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-[#080c12]/85 p-1 rounded-xl border border-white/5 mx-2">
+        <button 
+          id="nav-dashboard"
+          class="px-3.5 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg transition cursor-pointer text-cyan-400 bg-cyan-950/40 border border-cyan-800/20"
+        >
+          Dashboard
+        </button>
+        <button 
+          id="nav-history"
+          class="px-3.5 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-lg transition cursor-pointer text-slate-400 hover:text-white border border-transparent"
+        >
+          History Log
+        </button>
+      </nav>
+      
+      <!-- User / Profile Info -->
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:flex flex-col items-end">
+          <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status: ACTIVE</span>
+          <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-emerald-400 animate-pulse"></span>
+            Syncing
+          </span>
+        </div>
+        <div class="h-8 w-[1px] bg-white/10 hidden sm:block"></div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-slate-900 border border-white/20 flex items-center justify-center overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" alt="User Profile" class="w-full h-full object-cover">
+          </div>
+          <span class="text-xs font-bold text-white hidden md:inline">Elena K.</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout - Collapses completely to single-column scroll on mobile -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    
+    <!-- Dashboard View Tab -->
+    <div id="view-dashboard" class="space-y-6">
+      <!-- Hero / Intro -->
+      <div class="mb-8 relative">
+        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-6 h-6 text-cyan-400"></i> Adaptive Training Dashboard
+        </h2>
+        <p class="text-sm text-slate-300 mt-1.5 max-w-3xl">
+          Adjust weight/reps directly on card sets. Complete your split to log sets, evaluate your biomechanical training load, and update the cumulative muscle heatmap.
+        </p>
+      </div>
+
+      <!-- Layout Grid: 1 Column on Mobile, 12 Columns on Desktop -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Column: Workout Recommendation Panel (7 columns on desktop) -->
+        <section class="lg:col-span-7 space-y-6">
+          <div class="glass-panel rounded-3xl p-5 sm:p-6 relative overflow-hidden" id="workout-card-container">
+            <!-- Glow element -->
+            <div class="absolute -top-32 -left-32 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <!-- Progressive Overload Alert Banner (injected dynamically) -->
+            <div id="progression-banner" class="mb-4 relative z-10 hidden">
+              <!-- Dynamic banner HTML -->
+            </div>
+            
+            <!-- Recommendation Header -->
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-white/10 relative z-10">
+              <div class="flex-1">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <span class="text-[10px] uppercase font-black tracking-widest text-cyan-400 flex items-center gap-1.5">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 animate-pulse"></i> ACTIVE SPLIT RECOMMENDATION
+                  </span>
+                  
+                  <!-- Program Selector -->
+                  <div class="flex items-center gap-2">
+                    <span class="text-[9px] uppercase font-bold text-slate-500">Program:</span>
+                    <select 
+                      id="program-selector" 
+                      class="bg-[#030508]/80 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-cyan-400 font-black focus:outline-none focus:border-cyan-400 transition cursor-pointer"
+                      aria-label="Active Program Selector"
+                    >
+                      <option value="reddit-ppl">Reddit PPL (Metallicadpa)</option>
+                      <option value="phul">PHUL (Power Hypertrophy)</option>
+                      <option value="arnold-split">Arnold Split (Classic)</option>
+                      <option value="stronglifts">StrongLifts 5x5 (Strength)</option>
+                    </select>
+                  </div>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight" id="workout-title">Loading split...</h3>
+                <p class="text-xs text-slate-300 mt-2 flex items-center gap-1.5">
+                  <span class="font-bold text-slate-400">Focus:</span> 
+                  <span id="workout-focus" class="text-cyan-300 font-medium">---</span>
+                </p>
+              </div>
+              <div>
+                <span class="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5">
+                  <i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i> <span id="workout-difficulty">---</span>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Quick Stats Strip -->
+            <div class="grid grid-cols-3 gap-2 py-4 border-b border-white/10 relative z-10">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 text-cyan-400">
+                  <i data-lucide="clock" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-500 uppercase block font-bold">Duration</span>
+                  <span class="text-xs font-black text-white" id="workout-duration">-- Min</span>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 text-orange-400">
+                  <i data-lucide="flame" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-500 uppercase block font-bold">Est. Burn</span>
+                  <span class="text-xs font-black text-white" id="workout-calories">-- kcal</span>
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 text-emerald-400">
+                  <i data-lucide="award" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-500 uppercase block font-bold">Targeting</span>
+                  <span class="text-xs font-black text-white">Hypertrophy</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Muscle Targets -->
+            <div class="py-4 border-b border-white/10 relative z-10">
+              <span class="text-[9px] text-slate-500 uppercase block font-bold mb-2.5">Prime Stimulus Zones</span>
+              <div class="flex flex-wrap gap-2" id="workout-muscles">
+                <!-- Injected tags -->
+              </div>
+            </div>
+
+            <!-- Exercises List -->
+            <div class="py-5 relative z-10">
+              <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 mb-4 flex items-center gap-2">
+                <i data-lucide="dumbbell" class="w-4 h-4 text-cyan-400"></i> Active Sets List
+              </h4>
+              <div class="space-y-4" id="exercises-container">
+                <!-- Injected dynamically with inputs -->
+              </div>
+            </div>
+            
+            <!-- Rotation and Action Buttons -->
+            <div class="pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+              <p class="text-xs text-slate-400">Want to train a different split? Rotate to the next standard recommendation.</p>
+              <button 
+                id="not-this-workout-btn" 
+                class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                aria-label="Rotate suggestion card"
+              >
+                <i data-lucide="rotate-cw" class="w-4 h-4 text-cyan-400" id="rotate-icon"></i>
+                Not This Workout
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column: Chatbot, Heatmap/History tabs, and Plan Analyzer (5 columns on desktop) -->
+        <section class="lg:col-span-5 space-y-6">
+          
+          <!-- AURA AI Unified Chatbot Panel -->
+          <div class="glass-panel rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+            <div class="absolute -top-32 -right-32 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400">
+                  <i data-lucide="message-square" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-white uppercase tracking-wider">AURA AI Assistant</h3>
+                  <p class="text-[10px] text-slate-400">Ask science questions or generate workouts</p>
+                </div>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            </div>
+            
+            <!-- Chat Messages Window -->
+            <div class="chat-messages space-y-3 pr-1 mb-4" id="chat-messages">
+              <!-- Greeting Message -->
+              <div class="message-bubble message-aura">
+                Hi, I'm AURA, your biomechanical AI co-pilot. You can:
+                <br><br>
+                1. **Generate split routines** (e.g. *"Give me a 3-exercise chest routine"*).
+                <br>
+                2. **Ask science questions** (e.g. *"How long should I rest?"*, *"How do I breathe on bench press?"*, *"What is hypertrophy?"*).
+                <br><br>
+                Ask me anything mid-set!
+              </div>
+            </div>
+            
+            <!-- Message Input area -->
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                id="chat-message-input" 
+                class="flex-1 px-3 py-2.5 rounded-xl bg-black/60 border border-white/10 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-cyan-400 transition"
+                placeholder="Ask a question or request a split..."
+                aria-label="AURA chat message prompt"
+              >
+              <button 
+                id="send-msg-btn"
+                class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wider transition cursor-pointer btn-glow-cyan flex items-center gap-1.5"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+
+          <!-- Muscle Volume Heatmap & History Tabbed Panel -->
+          <div class="glass-panel rounded-3xl relative overflow-hidden flex flex-col">
+            
+            <!-- Tab Headers -->
+            <div class="flex border-b border-white/10 bg-slate-950/20">
+              <button 
+                id="tab-sidebar-heatmap" 
+                class="flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-cyan-400 text-cyan-400 bg-cyan-950/20 transition cursor-pointer"
+              >
+                Body Heatmap
+              </button>
+              <button 
+                id="tab-sidebar-history" 
+                class="flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                Workout History Log
+              </button>
+            </div>
+            
+            <!-- Tab Body Container -->
+            <div class="p-5">
+              
+              <!-- Pane 1: Heatmap Outline (Default active) -->
+              <div id="pane-sidebar-heatmap" class="space-y-4">
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider pb-2 border-b border-white/5">
+                  <span>Muscle Load Heatmap</span>
+                  <button 
+                    onclick="resetMuscleLog()"
+                    class="text-[9px] font-bold text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                  >
+                    Reset All Logs
+                  </button>
+                </div>
+                
+                <!-- Timeframe Selector for Heatmap -->
+                <div class="flex bg-black/60 rounded-xl p-0.5 border border-white/5 mt-2 justify-between">
+                  <button 
+                    id="heatmap-time-week"
+                    class="flex-1 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg text-cyan-400 bg-cyan-950/40 border border-cyan-800/20 cursor-pointer"
+                  >
+                    Week
+                  </button>
+                  <button 
+                    id="heatmap-time-month"
+                    class="flex-1 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Month
+                  </button>
+                  <button 
+                    id="heatmap-time-year"
+                    class="flex-1 py-1 text-[9px] font-black uppercase tracking-wider rounded-lg text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Year
+                  </button>
+                </div>
+                
+                <!-- Heatmaps Side by Side -->
+                <div class="grid grid-cols-2 gap-4 items-center justify-items-center py-2">
+                  <!-- Front SVG Map -->
+                  <div class="flex flex-col items-center">
+                    <span class="text-[9px] font-bold text-slate-500 mb-2">FRONT BODY</span>
+                    <svg width="110" height="200" viewBox="0 0 100 200" class="heatmap-body">
+                      <!-- Background Body Silhouette (Front) -->
+                      <path d="M50,10 C53,10 55,12 55,17 C55,21 53,25 51,26 C51,28 52,31 57,33 C64,33 70,35 73,39 C76,43 75,47 73,50 C71,54 69,61 69,69 C70,75 73,82 72,90 C71,94 70,97 69,97 C68,97 67,93 66,90 C65,84 64,74 63,69 C61,72 59,78 58,87 C57,93 56,100 56,103 C58,114 62,128 61,149 C60,153 60,156 59,156 C60,165 63,175 62,187 C62,194 63,197 60,197 C58,197 57,195 56,191 L55,187 C54,175 53,163 52,156 C51,150 49,133 49,119 C49,133 47,150 46,156 C45,163 44,175 43,187 L42,191 C41,195 40,197 38,197 C35,197 36,194 36,187 C35,175 38,165 39,156 C38,156 38,153 37,149 C36,128 40,114 42,103 C42,100 41,93 40,87 C39,78 37,72 35,69 C34,74 33,84 32,90 C31,93 30,97 29,97 C28,97 27,94 26,90 C25,82 28,75 29,69 C29,61 27,54 25,50 C23,47 22,43 25,39 C28,35 34,33 41,33 C46,31 47,28 47,26 C45,25 43,21 43,17 C43,12 45,10 50,10 Z" fill="#080c12" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+                      <!-- Shoulders (Front) -->
+                      <g id="muscle-shoulders" class="muscle-path">
+                        <!-- Left shoulder -->
+                        <path d="M37,35 C32,37 29,41 27,46 C27,49 29,52 31,53 C33,50 35,45 36,39 Z" />
+                        <!-- Right shoulder -->
+                        <path d="M63,35 C68,37 71,41 73,46 C73,49 71,52 69,53 C67,50 65,45 64,39 Z" />
+                      </g>
+                      <!-- Chest -->
+                      <g id="muscle-chest" class="muscle-path">
+                        <!-- Left pec -->
+                        <path d="M50,38 C46,38 40,38 38,39 C36,41 35,46 36,52 C41,54 46,55 50,53 Z" />
+                        <!-- Right pec -->
+                        <path d="M50,38 C54,38 60,38 62,39 C64,41 65,46 64,52 C59,54 54,55 50,53 Z" />
+                      </g>
+                      <!-- Arms (Front) -->
+                      <g id="muscle-arms" class="muscle-path">
+                        <!-- Left bicep -->
+                        <path d="M31,54 C29,58 29,64 30,68 C32,67 34,63 34,58 Z" />
+                        <!-- Right bicep -->
+                        <path d="M69,54 C71,58 71,64 70,68 C68,67 66,63 66,58 Z" />
+                        <!-- Left forearm -->
+                        <path d="M29,70 C27,74 27,81 28,87 C29,87 31,83 31,76 Z" />
+                        <!-- Right forearm -->
+                        <path d="M71,70 C73,74 73,81 72,87 C71,87 69,83 69,76 Z" />
+                      </g>
+                      <!-- Core (Abs & Obliques) -->
+                      <g id="muscle-core" class="muscle-path">
+                        <!-- Rectus abdominis -->
+                        <path d="M44,56 L56,56 C57,71 56,86 55,100 L45,100 C44,86 43,71 44,56 Z" />
+                        <!-- Left oblique -->
+                        <path d="M43,56 C41,63 40,74 41,86 C42,92 43,96 44,100 C42,100 40,94 38,87 C37,78 38,65 43,56 Z" />
+                        <!-- Right oblique -->
+                        <path d="M57,56 C59,63 60,74 59,86 C58,92 57,96 56,100 C58,100 60,94 62,87 C63,78 62,65 57,56 Z" />
+                      </g>
+                      <!-- Legs (Quads & Calves) -->
+                      <g id="muscle-legs" class="muscle-path">
+                        <!-- Left quad -->
+                        <path d="M43,103 C40,113 38,126 38,143 C40,145 42,145 44,145 C46,134 47,121 48,106 Z" />
+                        <!-- Right quad -->
+                        <path d="M57,103 C60,113 62,126 62,143 C60,145 58,145 56,145 C54,134 53,121 52,106 Z" />
+                        <!-- Left calf -->
+                        <path d="M39,153 C38,162 36,170 36,179 C37,180 39,180 40,180 C41,170 42,162 42,153 Z" />
+                        <!-- Right calf -->
+                        <path d="M61,153 C62,162 64,170 64,179 C63,180 61,180 60,180 C59,170 58,162 58,153 Z" />
+                      </g>
+                    </svg>
+                  </div>
+                  
+                  <!-- Back SVG Map -->
+                  <div class="flex flex-col items-center">
+                    <span class="text-[9px] font-bold text-slate-500 mb-2">BACK BODY</span>
+                    <svg width="110" height="200" viewBox="0 0 100 200" class="heatmap-body">
+                      <!-- Background Body Silhouette (Back) -->
+                      <path d="M50,10 C53,10 55,12 55,17 C55,21 53,25 51,26 C51,28 52,31 57,33 C64,33 70,35 73,39 C76,43 75,47 73,50 C71,54 69,61 69,69 C70,75 73,82 72,90 C71,94 70,97 69,97 C68,97 67,93 66,90 C65,84 64,74 63,69 C61,72 59,78 58,87 C57,93 56,100 56,103 C58,114 62,128 61,149 C60,153 60,156 59,156 C60,165 63,175 62,187 C62,194 63,197 60,197 C58,197 57,195 56,191 L55,187 C54,175 53,163 52,156 C51,150 49,133 49,119 C49,133 47,150 46,156 C45,163 44,175 43,187 L42,191 C41,195 40,197 38,197 C35,197 36,194 36,187 C35,175 38,165 39,156 C38,156 38,153 37,149 C36,128 40,114 42,103 C42,100 41,93 40,87 C39,78 37,72 35,69 C34,74 33,84 32,90 C31,93 30,97 29,97 C28,97 27,94 26,90 C25,82 28,75 29,69 C29,61 27,54 25,50 C23,47 22,43 25,39 C28,35 34,33 41,33 C46,31 47,28 47,26 C45,25 43,21 43,17 C43,12 45,10 50,10 Z" fill="#080c12" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+                      <!-- Shoulders (Back) -->
+                      <g id="muscle-shoulders-back" class="muscle-path">
+                        <!-- Left shoulder -->
+                        <path d="M37,35 C32,37 29,41 27,46 C27,49 29,52 31,53 C33,50 35,45 36,39 Z" />
+                        <!-- Right shoulder -->
+                        <path d="M63,35 C68,37 71,41 73,46 C73,49 71,52 69,53 C67,50 65,45 64,39 Z" />
+                      </g>
+                      <!-- Back (Upper traps, Lats, Lower back) -->
+                      <g id="muscle-back" class="muscle-path">
+                        <!-- Upper traps -->
+                        <path d="M50,28 C46,31 42,33 40,36 C44,39 47,40 50,42 C53,40 56,39 60,36 C58,33 54,31 50,28 Z" />
+                        <!-- Left lat -->
+                        <path d="M38,39 C36,50 38,64 42,88 C44,88 46,88 49,86 C48,68 45,50 38,39 Z" />
+                        <!-- Right lat -->
+                        <path d="M62,39 C64,50 62,64 58,88 C56,88 54,88 51,86 C52,68 55,50 62,39 Z" />
+                        <!-- Lower back -->
+                        <path d="M44,89 L56,89 C57,93 56,97 55,100 L45,100 C44,97 43,93 44,89 Z" />
+                      </g>
+                      <!-- Arms (Back) -->
+                      <g id="muscle-arms-back" class="muscle-path">
+                        <!-- Left tricep -->
+                        <path d="M31,54 C29,58 29,64 30,68 C32,67 33,63 33,58 Z" />
+                        <!-- Right tricep -->
+                        <path d="M69,54 C71,58 71,64 70,68 C68,67 67,63 67,58 Z" />
+                        <!-- Left forearm -->
+                        <path d="M29,70 C27,74 27,81 28,87 C29,87 31,83 31,76 Z" />
+                        <!-- Right forearm -->
+                        <path d="M71,70 C73,74 73,81 72,87 C71,87 69,83 69,76 Z" />
+                      </g>
+                      <!-- Legs (Glutes, Hamstrings, Calves) -->
+                      <g id="muscle-legs-back" class="muscle-path">
+                        <!-- Left glute -->
+                        <path d="M50,101 C46,101 42,104 40,109 C40,117 45,120 50,120 Z" />
+                        <!-- Right glute -->
+                        <path d="M50,101 C54,101 58,104 60,109 C60,117 55,120 50,120 Z" />
+                        <!-- Left hamstring -->
+                        <path d="M43,121 C40,129 38,137 38,144 C40,146 42,146 44,146 C46,137 47,129 48,121 Z" />
+                        <!-- Right hamstring -->
+                        <path d="M57,121 C60,129 62,137 62,144 C60,146 58,146 56,146 C54,137 53,129 52,121 Z" />
+                        <!-- Left calf -->
+                        <path d="M39,153 C38,162 36,170 36,179 C37,180 39,180 40,180 C41,170 42,162 42,153 Z" />
+                        <!-- Right calf -->
+                        <path d="M61,153 C62,162 64,170 64,179 C63,180 61,180 60,180 C59,170 58,162 58,153 Z" />
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase">
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-[#1e293b] border border-white/10"></span> Unworked</span>
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-[#00bcd4]"></span> Light (1-5)</span>
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-[#a855f7]"></span> Mod (6-12)</span>
+                  <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-[#ff0055]"></span> Heavy (13+)</span>
+                </div>
+
+                <!-- Muscle Volume Grid -->
+                <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/5 text-[9px] font-bold text-slate-400 uppercase">
+                  <div class="flex justify-between items-center bg-black/35 px-2 py-1 rounded border border-white/5 font-mono">
+                    <span>Chest</span>
+                    <span id="label-chest" class="text-cyan-400 font-extrabold">0 sets</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-black/35 px-2 py-1 rounded border border-white/5 font-mono">
+                    <span>Back</span>
+                    <span id="label-back" class="text-cyan-400 font-extrabold">0 sets</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-black/35 px-2 py-1 rounded border border-white/5 font-mono">
+                    <span>Shoulders</span>
+                    <span id="label-shoulders" class="text-cyan-400 font-extrabold">0 sets</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-black/35 px-2 py-1 rounded border border-white/5 font-mono">
+                    <span>Arms</span>
+                    <span id="label-arms" class="text-cyan-400 font-extrabold">0 sets</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-black/35 px-2 py-1 rounded border border-white/5 font-mono">
+                    <span>Core</span>
+                    <span id="label-core" class="text-cyan-400 font-extrabold">0 sets</span>
+                  </div>
+                  <div class="flex justify-between items-center bg-black/35 px-2 py-1 rounded border border-white/5 font-mono">
+                    <span>Legs</span>
+                    <span id="label-legs" class="text-cyan-400 font-extrabold">0 sets</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Pane 2: Workout History Log Timeline (Initially Hidden) -->
+              <div id="pane-sidebar-history" class="space-y-4 hidden">
+                <!-- Dynamically populated via JS -->
+              </div>
+              
+            </div>
+          </div>
+
+          <!-- Custom Workout Compare & Rate Panel (Existing Analyzer) -->
+          <div class="glass-panel rounded-3xl p-5 sm:p-6 relative overflow-hidden">
+            <div class="absolute -top-32 -right-32 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="flex items-center gap-2.5 pb-4 border-b border-white/10 mb-4">
+              <div class="w-9 h-9 rounded-xl bg-cyan-950/60 border border-cyan-800/40 flex items-center justify-center text-cyan-400">
+                <i data-lucide="git-compare" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider">Plan Analyzer</h3>
+                <p class="text-[10px] text-slate-400">Compare your custom plan against suggestion</p>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div>
+                <label for="custom-workout-input" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  What are you thinking instead?
+                </label>
+                <textarea 
+                  id="custom-workout-input" 
+                  rows="3" 
+                  class="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-white text-xs focus:outline-none focus:border-cyan-400 placeholder-slate-600 transition resize-none"
+                  placeholder="E.g., I want to run for 3 miles outside, then do 4 sets of wide-grip pullups."
+                ></textarea>
+              </div>
+              
+              <!-- Quick Suggestions Pills -->
+              <div>
+                <span class="block text-[9px] text-slate-500 uppercase font-bold mb-2">Quick Ideas (Click to Fill)</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button 
+                    class="quick-input-tag text-[10px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 transition cursor-pointer"
+                    data-text="Flat Bench Press for 4x8, dumbbell flyes, and triceps cable pushdowns."
+                  >
+                    🏋️‍♂️ Push: Bench & Flyes
+                  </button>
+                  <button 
+                    class="quick-input-tag text-[10px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 transition cursor-pointer"
+                    data-text="Heavy squat set of 4x6, Romanian deadlifts for 3x10, and finishing with hip thrusts."
+                  >
+                    🏋️‍♀️ Legs: Squats & RDLs
+                  </button>
+                  <button 
+                    class="quick-input-tag text-[10px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 transition cursor-pointer"
+                    data-text="Barbell bent-over rows for 4x8, lat pulldowns, and bicep curls."
+                  >
+                    🏋️‍♂️ Pull: Rows & Curls
+                  </button>
+                </div>
+              </div>
+
+              <!-- Compare & Rate Action -->
+              <button 
+                id="compare-btn" 
+                class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-extrabold text-xs tracking-wider shadow-lg shadow-cyan-500/10 flex items-center justify-center gap-1.5 transition cursor-pointer btn-glow-cyan"
+              >
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                Compare & Rate My Plan
+              </button>
+            </div>
+          </div>
+
+          <!-- Plan Analysis Result (Drawer overlay) -->
+          <div id="analysis-results" class="glass-panel rounded-3xl p-5 sm:p-6 relative overflow-hidden hidden border-cyan-800/20">
+            <div id="analysis-content" class="space-y-4">
+              <!-- Simulated review injected here -->
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Workout History Full View Tab -->
+    <div id="view-history" class="hidden space-y-8 animate-fade-in-up">
+      <!-- Title & Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+            <i data-lucide="history" class="w-7 h-7 text-cyan-400"></i> Detailed Training History
+          </h2>
+          <p class="text-sm text-slate-300 mt-1.5">
+            Analyze your volume progression, split distribution, and historic session ratings.
+          </p>
+        </div>
+        <button 
+          onclick="resetHistory()"
+          class="px-4 py-2.5 text-xs font-bold rounded-xl bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/30 text-rose-400 transition cursor-pointer self-start sm:self-auto flex items-center gap-1.5"
+        >
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Reset History
+        </button>
+      </div>
+
+      <!-- Timeframe Filter for History Analytics -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#080c12]/85 p-3 rounded-2xl border border-white/5">
+        <div class="flex items-center gap-2">
+          <i data-lucide="filter" class="w-4 h-4 text-cyan-400"></i>
+          <span class="text-xs uppercase font-black text-slate-300 tracking-wider">Filter Timeframe:</span>
+        </div>
+        <div class="flex bg-black/60 rounded-xl p-0.5 border border-white/5">
+          <button 
+            id="history-time-week"
+            class="px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-400 hover:text-white cursor-pointer"
+          >
+            This Week
+          </button>
+          <button 
+            id="history-time-month"
+            class="px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-400 hover:text-white cursor-pointer"
+          >
+            This Month
+          </button>
+          <button 
+            id="history-time-year"
+            class="px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-400 hover:text-white cursor-pointer"
+          >
+            This Year
+          </button>
+          <button 
+            id="history-time-all"
+            class="px-3.5 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg text-cyan-400 bg-cyan-950/40 border border-cyan-800/20 cursor-pointer"
+          >
+            All-Time
+          </button>
+        </div>
+      </div>
+
+      <!-- Overview Analytics Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Completed Workouts -->
+        <div class="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden bg-slate-900/40">
+          <div class="absolute -right-6 -bottom-6 w-20 h-20 text-slate-800/10 pointer-events-none">
+            <i data-lucide="calendar" class="w-full h-full"></i>
+          </div>
+          <span class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Sessions Completed</span>
+          <h3 class="text-3xl font-black text-white mt-1.5" id="stats-total-workouts">0</h3>
+          <p class="text-[10px] text-slate-400 mt-1">Consistent hypertrophy frequency</p>
+        </div>
+
+        <!-- Card 2: Cumulative Volume -->
+        <div class="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden bg-slate-900/40">
+          <div class="absolute -right-6 -bottom-6 w-20 h-20 text-slate-800/10 pointer-events-none">
+            <i data-lucide="dumbbell" class="w-full h-full"></i>
+          </div>
+          <span class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Total Volume Lifted</span>
+          <h3 class="text-3xl font-black text-white mt-1.5" id="stats-total-volume">0 lbs</h3>
+          <p class="text-[10px] text-slate-400 mt-1">Accumulated load stimulus</p>
+        </div>
+
+        <!-- Card 3: Avg Coherence Score -->
+        <div class="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden bg-slate-900/40">
+          <div class="absolute -right-6 -bottom-6 w-20 h-20 text-slate-800/10 pointer-events-none">
+            <i data-lucide="trending-up" class="w-full h-full"></i>
+          </div>
+          <span class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Avg Coherence Rating</span>
+          <h3 class="text-3xl font-black text-white mt-1.5" id="stats-avg-score">0%</h3>
+          <p class="text-[10px] text-slate-400 mt-1">Precision volume consistency</p>
+        </div>
+
+        <!-- Card 4: Most Trained Area -->
+        <div class="glass-panel p-5 rounded-2xl border border-white/10 relative overflow-hidden bg-slate-900/40">
+          <div class="absolute -right-6 -bottom-6 w-20 h-20 text-slate-800/10 pointer-events-none">
+            <i data-lucide="activity" class="w-full h-full"></i>
+          </div>
+          <span class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Primary Muscle Focus</span>
+          <h3 class="text-3xl font-black text-white mt-1.5" id="stats-fav-muscle">None</h3>
+          <p class="text-[10px] text-slate-400 mt-1">Highest load density category</p>
+        </div>
+      </div>
+
+      <!-- Charts Section: Two Column Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Volume Progression -->
+        <div class="glass-panel p-5 sm:p-6 rounded-3xl border border-white/10 relative overflow-hidden bg-slate-900/20">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i data-lucide="trending-up" class="w-4 h-4 text-cyan-400"></i> Session Volume Progression
+          </h3>
+          <div class="h-64 flex items-end justify-around gap-2 pt-4 border-b border-white/10 relative pb-1 min-h-[250px]" id="chart-volume-container">
+            <!-- Dynamically rendered bar graph -->
+          </div>
+          <div class="flex justify-between items-center text-[9px] font-bold text-slate-500 uppercase mt-3">
+            <span>Past Sessions (Oldest)</span>
+            <span>(Newest)</span>
+          </div>
+        </div>
+
+        <!-- Chart 2: Muscle Distribution -->
+        <div class="glass-panel p-5 sm:p-6 rounded-3xl border border-white/10 relative overflow-hidden bg-slate-900/20">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-cyan-400"></i> Muscle Load Distribution (Sets)
+          </h3>
+          <div class="h-64 flex flex-col justify-between py-2" id="chart-distribution-container">
+            <!-- Dynamically rendered progress bars for each muscle category -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline & Detailed Cards Section -->
+      <div class="space-y-6">
+        <h3 class="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="layers" class="w-5 h-5 text-cyan-400"></i> Historic Session Logs
+        </h3>
+        <div class="space-y-6" id="history-detail-cards">
+          <!-- Dynamically populated detail cards -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Biomechanical Form Guide & Video Modal -->
+  <div id="form-guide-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b border-white/10 bg-slate-950/40">
+        <div>
+          <span class="text-[9px] font-bold text-cyan-400 tracking-wider block" id="modal-category">CATEGORY</span>
+          <h3 class="text-base sm:text-lg font-black text-white" id="modal-title">Exercise Name</h3>
+        </div>
+        <button 
+          id="modal-close-btn" 
+          class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition border border-white/5 cursor-pointer"
+          aria-label="Close form guide modal"
+        >
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      
+      <!-- Modal Tabs Control -->
+      <div class="flex border-b border-white/10 bg-slate-950/20">
+        <button 
+          id="tab-text" 
+          class="flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-cyan-400 text-cyan-400 bg-cyan-950/20 transition cursor-pointer"
+        >
+          Form & Cues
+        </button>
+        <button 
+          id="tab-video" 
+          class="flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white transition cursor-pointer"
+        >
+          Watch Kinetic Demo
+        </button>
+      </div>
+      
+      <!-- Modal Scrollable Content Container -->
+      <div class="p-5 overflow-y-auto max-h-[380px] space-y-5">
+        
+        <!-- Tab 1: Form & Biomechanics text -->
+        <div id="pane-text" class="space-y-4">
+          <!-- Setup Steps -->
+          <div class="space-y-1.5">
+            <h4 class="text-xs font-bold text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
+              <i data-lucide="compass" class="w-3.5 h-3.5"></i> Step 1: Set Up Posture
+            </h4>
+            <ol class="list-decimal pl-5 text-xs text-slate-200 space-y-1" id="modal-setup-steps">
+              <!-- Setup steps -->
+            </ol>
+          </div>
+          
+          <!-- Execution Steps -->
+          <div class="space-y-1.5 pt-1">
+            <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
+              <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> Step 2: Kinetic Execution
+            </h4>
+            <ol class="list-decimal pl-5 text-xs text-slate-200 space-y-1" id="modal-execution-steps">
+              <!-- Execution steps -->
+            </ol>
+          </div>
+          
+          <!-- Cues & Mistakes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+            <!-- Mistakes -->
+            <div class="space-y-1.5">
+              <h4 class="text-xs font-bold text-rose-500 uppercase tracking-wide flex items-center gap-1">
+                ❌ Common Pitfalls
+              </h4>
+              <ul class="space-y-1.5" id="modal-mistakes">
+                <!-- Mistakes list -->
+              </ul>
+            </div>
+            <!-- Cues -->
+            <div class="space-y-1.5">
+              <h4 class="text-xs font-bold text-cyan-400 uppercase tracking-wide flex items-center gap-1">
+                ✦ Alignment Cues
+              </h4>
+              <ul class="space-y-1.5" id="modal-cues">
+                <!-- Cues list -->
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 2: Mock Video Demo player -->
+        <div id="pane-video" class="space-y-4 hidden">
+          <div class="video-container">
+            <div class="video-screen">
+              <!-- Stylized Biomechanical Canvas -->
+              <canvas id="biomech-canvas" width="300" height="230" class="w-full h-full object-contain"></canvas>
+              
+              <!-- Posture overlays -->
+              <div class="posture-grid"></div>
+              <div class="posture-guide-line" style="top: 30%; left: 0; right: 0;"></div>
+              <div class="posture-guide-line" style="top: 0; bottom: 0; left: 50%;"></div>
+              
+              <!-- Overlay hud indicators -->
+              <span class="absolute top-2 left-2 text-[8px] bg-black/60 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-400/20 font-bold uppercase tracking-wider">
+                Biomechanical Feed
+              </span>
+              <span class="absolute top-2 right-2 text-[8px] bg-black/60 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-400/20 font-bold uppercase tracking-wider">
+                60 fps // Joint Lock
+              </span>
+            </div>
+            
+            <!-- Video Control Strip -->
+            <div class="absolute bottom-0 left-0 right-0 p-3 bg-black/80 backdrop-blur-sm flex items-center gap-3 border-t border-white/5">
+              <button 
+                id="video-play-btn" 
+                class="w-8 h-8 rounded-lg bg-cyan-400 hover:bg-cyan-300 flex items-center justify-center cursor-pointer transition"
+                aria-label="Play biomechanical demonstration video loop"
+              >
+                <i data-lucide="play" class="w-4 h-4 text-slate-950"></i>
+              </button>
+              
+              <div id="video-progress-container" class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer">
+                <div id="video-progress" class="h-full bg-cyan-400 rounded-full w-0 transition-all duration-200"></div>
+              </div>
+              
+              <span class="text-[9px] font-bold text-slate-400 tracking-wider">0:12 / 0:12</span>
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-400 leading-normal">
+            *Reviewing joint alignment guides: Green dashed lines outline correct vector thresholds. Hold joint lock positions to minimize tendon friction during heavy loading.*
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Workout Score Outcomes Modal -->
+  <div id="score-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content max-w-md">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b border-white/10 bg-slate-950/40">
+        <div>
+          <span class="text-[9px] font-bold text-emerald-400 tracking-wider block">LOGGING ENGINE</span>
+          <h3 class="text-base sm:text-lg font-black text-white">Workout Performance Analysis</h3>
+        </div>
+        <button 
+          id="score-modal-close" 
+          class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition border border-white/5 cursor-pointer"
+          aria-label="Close workout score modal"
+        >
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="p-6 text-center space-y-6">
+        
+        <!-- Score Circular Progress Ring Dial -->
+        <div class="relative w-36 h-36 mx-auto flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90">
+            <circle cx="72" cy="72" r="52" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="transparent"></circle>
+            <circle 
+              id="score-circle-bar" 
+              cx="72" cy="72" r="52" 
+              stroke="url(#emerald-gradient)" 
+              stroke-width="8" 
+              fill="transparent" 
+              stroke-dasharray="326.7" 
+              stroke-dashoffset="326.7"
+              stroke-linecap="round"
+              class="score-circle"
+            ></circle>
+            
+            <defs>
+              <linearGradient id="emerald-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="100%" stop-color="#06b6d4" />
+              </linearGradient>
+            </defs>
+          </svg>
+          
+          <div class="absolute flex flex-col items-center">
+            <span class="text-3xl font-black text-white tracking-tight" id="score-percentage">0%</span>
+            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">COHERENCE</span>
+          </div>
+        </div>
+        
+        <p class="text-xs text-slate-300 leading-normal max-w-sm mx-auto">
+          AURA has updated your weekly muscle loading ratios. Muscle groups trained in this split are now rendered on the body heatmap.
+        </p>
+        
+        <!-- Feedback list injected here -->
+        <div id="score-feedback-content" class="text-left bg-black/45 border border-white/5 rounded-2xl p-4 space-y-3">
+          <!-- Strengths and areas of optimization -->
+        </div>
+
+        <button 
+          onclick="closeScoreModal()"
+          class="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white font-extrabold text-xs tracking-wider transition cursor-pointer"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-white/10 bg-black/40 backdrop-blur-md py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>&copy; 2026 AURA Biomechanics. Designed for precise kinetic tracking.</p>
+      <div class="flex items-center gap-4">
+        <a href="#" class="hover:text-cyan-400 transition">Terms</a>
+        <a href="#" class="hover:text-cyan-400 transition">Privacy Policy</a>
+        <a href="#" class="hover:text-cyan-400 transition">Help Desk</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
