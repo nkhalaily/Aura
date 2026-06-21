@@ -362,6 +362,20 @@ const CATEGORY_MAP = {
 // Initial state
 let currentActiveWorkout = null;
 
+// Helper to retrieve and sanitize history from localStorage
+function getSanitizedHistory() {
+  try {
+    const raw = localStorage.getItem("workoutHistory");
+    if (!raw) return [];
+    const history = JSON.parse(raw);
+    if (!Array.isArray(history)) return [];
+    return history.filter(log => log && Array.isArray(log.exercises));
+  } catch (e) {
+    console.error("Error parsing history:", e);
+    return [];
+  }
+}
+
 // DOM references
 const workoutCardContainer = document.getElementById("workout-card-container");
 const workoutTitleEl = document.getElementById("workout-title");
@@ -954,7 +968,7 @@ function swapSingleExercise(index) {
 
 // Progressive Overload Engine: Auto-scales weight (+5 lbs / +2 lbs) or reps (+1) based on history
 function applyProgressiveOverload(workout) {
-  const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  const history = getSanitizedHistory();
   if (history.length === 0) return;
   
   workout.exercises.forEach(ex => {
@@ -1321,7 +1335,7 @@ function logAndCompleteWorkout() {
   });
   localStorage.setItem("muscleTracker", JSON.stringify(muscleTracker));
   
-  const workoutHistory = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  const workoutHistory = getSanitizedHistory();
   workoutHistory.push({
     timestamp: Date.now(),
     date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
@@ -1425,7 +1439,7 @@ function renderHistoryUI() {
   const historyContainer = document.getElementById("pane-sidebar-history");
   if (!historyContainer) return;
   
-  const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  const history = getSanitizedHistory();
   
   if (history.length === 0) {
     historyContainer.innerHTML = `
@@ -1552,7 +1566,7 @@ function renderDetailedHistoryUI() {
   const chartDistributionContainer = document.getElementById("chart-distribution-container");
   const historyDetailCards = document.getElementById("history-detail-cards");
   
-  const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  const history = getSanitizedHistory();
   
   // Calculate start of timeframe cutoff
   let cutoff = 0;
@@ -2504,7 +2518,7 @@ function handleExerciseNameInput(idx, value) {
 
 // Compute active sets load dynamically based on active timeframe
 function getFilteredSets(timeframe) {
-  const history = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
+  const history = getSanitizedHistory();
   const muscleSets = { chest: 0, back: 0, shoulders: 0, arms: 0, core: 0, legs: 0 };
   
   let cutoff = 0;
